@@ -1,5 +1,9 @@
 [
     {
+        "name": "ELISA",
+        "score": 655
+    },
+    {
         "name": "MELYOU",
         "score": 520
     },
@@ -12,8 +16,16 @@
         "score": 300
     },
     {
+        "name": "MIKE",
+        "score": 245
+    },
+    {
         "name": "JEAN",
         "score": 190
+    },
+    {
+        "name": "TEST",
+        "score": 180
     },
     {
         "name": "MIKE",
@@ -24,19 +36,7 @@
         "score": 130
     },
     {
-        "name": "VANESSA",
-        "score": 60
-    },
-    {
-        "name": "JEAN",
-        "score": 40
-    },
-    {
-        "name": "INNOX",
-        "score": 40
-    },
-    {
-        "name": "KADESH",
-        "score": 40
+        "name": "MAMAN",
+        "score": 100
     }
 ]

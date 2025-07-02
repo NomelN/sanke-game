@@ -4,6 +4,7 @@ import math
 import pygame
 import json
 import os
+import time
 
 # --- Constantes ---
 WIDTH = 600
@@ -78,6 +79,13 @@ class SnakeGame:
         self.special_food = None
         self.special_food_timer = None
         self.special_food_exists = False
+        self.special_food_spawn_time = None
+        self.special_food_remaining_lifespan = None
+        self.next_special_food_spawn_time = None
+        self.special_food_spawn_remaining_time = None
+        self.create_special_food_timed_id = None
+        self.paused = False
+        self.game_loop_id = None
         self.draw_menu()
 
     def draw_grid(self):
@@ -186,7 +194,7 @@ class SnakeGame:
 
         self.create_food()
         self.animate_food()
-        self.master.after(SPECIAL_FOOD_SPAWN_INTERVAL, self.create_special_food_timed)
+        self.create_special_food_timed_id = self.master.after(SPECIAL_FOOD_SPAWN_INTERVAL, self.create_special_food_timed)
 
     def create_obstacles(self):
         for _ in range(5):
@@ -238,6 +246,7 @@ class SnakeGame:
             fill=SPECIAL_FOOD_COLOR_1, outline=SPECIAL_FOOD_COLOR_2, width=2
         )
         self.special_food_exists = True
+        self.special_food_spawn_time = time.time()
         self.special_food_timer = self.master.after(SPECIAL_FOOD_LIFESPAN, self.remove_special_food)
         self.animate_special_food()
 
@@ -246,17 +255,56 @@ class SnakeGame:
             self.canvas.delete(self.special_food)
             self.special_food = None
             self.special_food_exists = False
+            self.special_food_spawn_time = None
         if self.special_food_timer:
             self.master.after_cancel(self.special_food_timer)
             self.special_food_timer = None
 
     def animate_special_food(self):
-        if self.state != 'game' or not self.special_food_exists:
+        if self.state != 'game' or not self.special_food_exists or self.paused:
             return
         current_color = self.canvas.itemcget(self.special_food, "fill")
         next_color = SPECIAL_FOOD_COLOR_1 if current_color == SPECIAL_FOOD_COLOR_2 else SPECIAL_FOOD_COLOR_2
         self.canvas.itemconfig(self.special_food, fill=next_color)
         self.master.after(200, self.animate_special_food)
+
+    def toggle_pause(self):
+        self.paused = not self.paused
+        if self.paused:
+            pygame.mixer.music.pause()
+            self.canvas.create_text(WIDTH / 2, HEIGHT / 2,
+                text="PAUSED", font=("Consolas", 48, "bold"), fill=HIGHLIGHT_COLOR, tags="pause_text")
+            if self.game_loop_id:
+                self.master.after_cancel(self.game_loop_id)
+                self.game_loop_id = None
+            
+            # Pause special food timer
+            if self.special_food_exists and self.special_food_timer:
+                self.master.after_cancel(self.special_food_timer)
+                elapsed_time = time.time() - self.special_food_spawn_time
+                self.special_food_remaining_lifespan = SPECIAL_FOOD_LIFESPAN - (elapsed_time * 1000)
+
+            # Pause special food spawn timer
+            if self.next_special_food_spawn_time:
+                elapsed_spawn_time = time.time() - (self.next_special_food_spawn_time - (SPECIAL_FOOD_SPAWN_INTERVAL / 1000))
+                self.special_food_spawn_remaining_time = SPECIAL_FOOD_SPAWN_INTERVAL - (elapsed_spawn_time * 1000)
+                self.master.after_cancel(self.create_special_food_timed_id)
+                self.create_special_food_timed_id = None
+
+        else:
+            pygame.mixer.music.unpause()
+            self.canvas.delete("pause_text")
+            self.game_loop()
+
+            # Resume special food timer
+            if self.special_food_exists and self.special_food_remaining_lifespan > 0:
+                self.special_food_timer = self.master.after(int(self.special_food_remaining_lifespan), self.remove_special_food)
+                self.special_food_spawn_time = time.time() - (SPECIAL_FOOD_LIFESPAN - self.special_food_remaining_lifespan) / 1000
+
+            # Resume special food spawn timer
+            if self.special_food_spawn_remaining_time > 0:
+                self.create_special_food_timed_id = self.master.after(int(self.special_food_spawn_remaining_time), self.create_special_food_timed)
+                self.next_special_food_spawn_time = time.time() + (self.special_food_spawn_remaining_time / 1000)
 
     def move_snake(self):
         if not self.snake or not self.canvas.coords(self.snake[0]):
@@ -377,13 +425,16 @@ class SnakeGame:
                     pygame.mixer.music.play(-1)
 
         elif self.state == 'game':
+            if key == 'space':
+                self.toggle_pause()
+                return
             all_directions = ["Left", "Right", "Up", "Down"]
             opposites = {"Up": "Down", "Down": "Up", "Left": "Right", "Right": "Left"}
             if (key in all_directions) and (key != opposites.get(self.direction)):
                 self.direction = key
 
     def animate_food(self):
-        if self.state != 'game':
+        if self.state != 'game' or self.paused:
             return
         # Check if food exists
         if not self.canvas.find_withtag(self.food):
@@ -394,9 +445,11 @@ class SnakeGame:
         self.master.after(400, self.animate_food)
 
     def create_special_food_timed(self):
-        if self.state == 'game' and not self.special_food_exists:
+        if self.state == 'game' and not self.special_food_exists and not self.paused:
             self.create_special_food()
-        self.master.after(SPECIAL_FOOD_SPAWN_INTERVAL, self.create_special_food_timed)
+            self.next_special_food_spawn_time = time.time() + (SPECIAL_FOOD_SPAWN_INTERVAL / 1000)
+        self.special_food_spawn_remaining_time = SPECIAL_FOOD_SPAWN_INTERVAL
+        self.create_special_food_timed_id = self.master.after(SPECIAL_FOOD_SPAWN_INTERVAL, self.create_special_food_timed)
 
     def dissolve_snake(self, segment_index):
         if segment_index < len(self.snake):
@@ -434,11 +487,15 @@ class SnakeGame:
     def game_loop(self):
         if self.state != 'game':
             return
+        if self.paused:
+            self.game_loop_id = self.master.after(GAME_SPEED, self.game_loop)
+            return
+        
         if self.check_collisions():
             self.display_game_over()
             return
         self.move_snake()
-        self.master.after(GAME_SPEED, self.game_loop)
+        self.game_loop_id = self.master.after(GAME_SPEED, self.game_loop)
 
 if __name__ == "__main__":
     root = tk.Tk()
