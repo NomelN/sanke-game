@@ -47,9 +47,22 @@ class SnakeGame:
             self.food_sound = None
 
         if os.path.exists("média/8bit-music-for-game-68698.mp3"):
-            pygame.mixer.music.load("média/8bit-music-for-game-68698.mp3")
+            self.menu_music_path = "média/8bit-music-for-game-68698.mp3"
         else:
-            print("Warning: Background music file not found.")
+            self.menu_music_path = None
+            print("Warning: Menu background music file not found.")
+
+        if os.path.exists("média/8bit-music-for-game-68698.mp3"):
+            self.game_music_path = "média/8bit-music-for-game-68698.mp3"
+        else:
+            self.game_music_path = None
+            print("Warning: Game background music file not found.")
+
+        if os.path.exists("média/game-over-38511.mp3"):
+            self.game_over_sound = pygame.mixer.Sound("média/game-over-38511.mp3")
+        else:
+            self.game_over_sound = None
+            print("Warning: Game Over sound file not found.")
 
         self.state = 'menu'
         self.current_player = ""
@@ -68,7 +81,8 @@ class SnakeGame:
     def draw_menu(self):
         self.canvas.delete("all")
         self.draw_grid()
-        if not pygame.mixer.music.get_busy():
+        if self.menu_music_path and not pygame.mixer.music.get_busy():
+            pygame.mixer.music.load(self.menu_music_path)
             pygame.mixer.music.play(-1)
         self.canvas.create_text(
             WIDTH / 2, HEIGHT / 2 - 150,
@@ -272,6 +286,9 @@ class SnakeGame:
             if key == 'Return':
                 if self.current_player:
                     pygame.mixer.music.stop()
+                    if self.game_music_path:
+                        pygame.mixer.music.load(self.game_music_path)
+                        pygame.mixer.music.play(-1)
                     self.state = 'game'
                     self.start_game()
                     self.game_loop()
@@ -286,15 +303,18 @@ class SnakeGame:
             if key == 'Return' or key == 'Escape':
                 self.state = 'menu'
                 self.draw_menu()
-                if not pygame.mixer.music.get_busy():
+                if self.menu_music_path and not pygame.mixer.music.get_busy():
+                    pygame.mixer.music.load(self.menu_music_path)
                     pygame.mixer.music.play(-1)
 
         elif self.state == 'game_over':
             if key == 'Return':
+                pygame.mixer.music.stop()
                 self.state = 'menu'
                 self.current_player = ""
                 self.draw_menu()
-                if not pygame.mixer.music.get_busy():
+                if self.menu_music_path and not pygame.mixer.music.get_busy():
+                    pygame.mixer.music.load(self.menu_music_path)
                     pygame.mixer.music.play(-1)
 
         elif self.state == 'game':
@@ -324,6 +344,8 @@ class SnakeGame:
 
     def display_game_over(self):
         if self.collision_sound: self.collision_sound.play()
+        if self.game_over_sound: self.game_over_sound.play()
+        pygame.mixer.music.stop()
         self.state = 'game_over'
         self.dissolve_snake(0)
 

@@ -1,7 +1,19 @@
 [
     {
+        "name": "NOMEL",
+        "score": 330
+    },
+    {
+        "name": "BELIA",
+        "score": 300
+    },
+    {
         "name": "MIKE",
         "score": 150
+    },
+    {
+        "name": "AKPA",
+        "score": 130
     },
     {
         "name": "VANESSA",
@@ -12,11 +24,19 @@
         "score": 40
     },
     {
-        "name": "MIKE",
-        "score": 0
+        "name": "INNOX",
+        "score": 40
     },
     {
-        "name": "MIKE",
-        "score": 0
+        "name": "KADESH",
+        "score": 40
+    },
+    {
+        "name": "KOFFI",
+        "score": 30
+    },
+    {
+        "name": "KADESH",
+        "score": 20
     }
 ]
