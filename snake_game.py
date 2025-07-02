@@ -46,6 +46,11 @@ class SnakeGame:
         else:
             self.food_sound = None
 
+        if os.path.exists("média/8bit-music-for-game-68698.mp3"):
+            pygame.mixer.music.load("média/8bit-music-for-game-68698.mp3")
+        else:
+            print("Warning: Background music file not found.")
+
         self.state = 'menu'
         self.current_player = ""
         self.selected_menu_option = 0
@@ -63,6 +68,8 @@ class SnakeGame:
     def draw_menu(self):
         self.canvas.delete("all")
         self.draw_grid()
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.play(-1)
         self.canvas.create_text(
             WIDTH / 2, HEIGHT / 2 - 150,
             text="CYBER SNAKE",
@@ -264,6 +271,7 @@ class SnakeGame:
         elif self.state == 'name_input':
             if key == 'Return':
                 if self.current_player:
+                    pygame.mixer.music.stop()
                     self.state = 'game'
                     self.start_game()
                     self.game_loop()
@@ -278,12 +286,16 @@ class SnakeGame:
             if key == 'Return' or key == 'Escape':
                 self.state = 'menu'
                 self.draw_menu()
+                if not pygame.mixer.music.get_busy():
+                    pygame.mixer.music.play(-1)
 
         elif self.state == 'game_over':
             if key == 'Return':
                 self.state = 'menu'
                 self.current_player = ""
                 self.draw_menu()
+                if not pygame.mixer.music.get_busy():
+                    pygame.mixer.music.play(-1)
 
         elif self.state == 'game':
             all_directions = ["Left", "Right", "Up", "Down"]
