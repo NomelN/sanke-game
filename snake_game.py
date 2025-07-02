@@ -1,6 +1,7 @@
 import tkinter as tk
 import random
 import math
+import pygame
 
 # --- Constantes ---
 WIDTH = 600
@@ -29,6 +30,10 @@ class SnakeGame:
         self.canvas.pack()
 
         self.master.bind("<KeyPress>", self.on_key_press)
+
+        pygame.mixer.init()
+        self.collision_sound = pygame.mixer.Sound("média/explosion-312361.mp3")
+        self.food_sound = pygame.mixer.Sound("média/bubblepop-254773.mp3")
 
         self.pulse_state = True
         self.start_game()
@@ -134,7 +139,7 @@ class SnakeGame:
         # Simple collision check based on bounding boxes
         if head_coords[0] < food_coords[2] and head_coords[2] > food_coords[0] and \
            head_coords[1] < food_coords[5] and head_coords[3] > food_coords[1]:
-            self.master.bell()
+            self.food_sound.play()
             self.canvas.delete(self.food)
             self.create_food()
             self.score += 10
@@ -189,7 +194,7 @@ class SnakeGame:
             self.display_final_text()
 
     def display_game_over(self):
-        self.master.bell()
+        self.collision_sound.play()
         self.game_over_flag = True
         self.dissolve_snake(0)
 
