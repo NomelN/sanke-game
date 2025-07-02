@@ -41,8 +41,8 @@ class SnakeGame:
             self.collision_sound = pygame.mixer.Sound("média/explosion-312361.mp3")
         else:
             self.collision_sound = None
-        if os.path.exists("média/food-272135.mp3"):
-            self.food_sound = pygame.mixer.Sound("média/food-272135.mp3")
+        if os.path.exists("média/food.mp3"):
+            self.food_sound = pygame.mixer.Sound("média/food.mp3")
         else:
             self.food_sound = None
 
