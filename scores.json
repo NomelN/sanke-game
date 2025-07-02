@@ -1,11 +1,19 @@
 [
     {
+        "name": "MELYOU",
+        "score": 520
+    },
+    {
         "name": "NOMEL",
         "score": 330
     },
     {
         "name": "BELIA",
         "score": 300
+    },
+    {
+        "name": "JEAN",
+        "score": 190
     },
     {
         "name": "MIKE",
@@ -30,13 +38,5 @@
     {
         "name": "KADESH",
         "score": 40
-    },
-    {
-        "name": "KOFFI",
-        "score": 30
-    },
-    {
-        "name": "KADESH",
-        "score": 20
     }
 ]

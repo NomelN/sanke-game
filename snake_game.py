@@ -22,6 +22,11 @@ FOOD_COLOR_2 = "#FF69B4"  # Rose vif
 TEXT_COLOR = "#E0E0E0"  # Blanc cassé
 HIGHLIGHT_COLOR = "#FFFFFF" # Blanc pour la sélection
 OBSTACLE_COLOR = "#480048" # Violet foncé
+SPECIAL_FOOD_COLOR_1 = "#FFFF00"  # Jaune vif
+SPECIAL_FOOD_COLOR_2 = "#FFA500"  # Orange vif
+SPECIAL_FOOD_SIZE_MULTIPLIER = 1.5
+SPECIAL_FOOD_SPAWN_INTERVAL = 10000  # 10 secondes
+SPECIAL_FOOD_LIFESPAN = 5000  # 5 secondes
 
 class SnakeGame:
     def __init__(self, master):
@@ -70,6 +75,9 @@ class SnakeGame:
         self.menu_options = ["[ START ]", "[ HIGH SCORES ]", "[ QUIT ]"]
         self.scores = self.load_scores()
         self.pulse_state = True
+        self.special_food = None
+        self.special_food_timer = None
+        self.special_food_exists = False
         self.draw_menu()
 
     def draw_grid(self):
@@ -178,6 +186,7 @@ class SnakeGame:
 
         self.create_food()
         self.animate_food()
+        self.master.after(SPECIAL_FOOD_SPAWN_INTERVAL, self.create_special_food_timed)
 
     def create_obstacles(self):
         for _ in range(5):
@@ -209,6 +218,45 @@ class SnakeGame:
             x, y + SEGMENT_SIZE / 2,
             fill=FOOD_COLOR_1, outline=TEXT_COLOR
         )
+
+    def create_special_food(self):
+        while True:
+            x = random.randint(0, (WIDTH // SEGMENT_SIZE) - 1) * SEGMENT_SIZE
+            y = random.randint(0, (HEIGHT // SEGMENT_SIZE) - 1) * SEGMENT_SIZE
+            on_snake = any(self.canvas.coords(seg) == [float(x), float(y), float(x + SEGMENT_SIZE), float(y + SEGMENT_SIZE)] for seg in self.snake)
+            on_obstacle = any(self.canvas.coords(obs) == [float(x), float(y), float(x + SEGMENT_SIZE), float(y + SEGMENT_SIZE)] for obs in self.obstacles)
+            if not on_snake and not on_obstacle:
+                break
+        
+        # Calculate larger size for special food
+        special_size = SEGMENT_SIZE * SPECIAL_FOOD_SIZE_MULTIPLIER
+        offset = (special_size - SEGMENT_SIZE) / 2
+
+        self.special_food = self.canvas.create_oval(
+            x - offset, y - offset,
+            x + SEGMENT_SIZE + offset, y + SEGMENT_SIZE + offset,
+            fill=SPECIAL_FOOD_COLOR_1, outline=SPECIAL_FOOD_COLOR_2, width=2
+        )
+        self.special_food_exists = True
+        self.special_food_timer = self.master.after(SPECIAL_FOOD_LIFESPAN, self.remove_special_food)
+        self.animate_special_food()
+
+    def remove_special_food(self):
+        if self.special_food:
+            self.canvas.delete(self.special_food)
+            self.special_food = None
+            self.special_food_exists = False
+        if self.special_food_timer:
+            self.master.after_cancel(self.special_food_timer)
+            self.special_food_timer = None
+
+    def animate_special_food(self):
+        if self.state != 'game' or not self.special_food_exists:
+            return
+        current_color = self.canvas.itemcget(self.special_food, "fill")
+        next_color = SPECIAL_FOOD_COLOR_1 if current_color == SPECIAL_FOOD_COLOR_2 else SPECIAL_FOOD_COLOR_2
+        self.canvas.itemconfig(self.special_food, fill=next_color)
+        self.master.after(200, self.animate_special_food)
 
     def move_snake(self):
         if not self.snake or not self.canvas.coords(self.snake[0]):
@@ -242,6 +290,17 @@ class SnakeGame:
             self.create_food()
             self.score += 10
             self.canvas.itemconfig(self.score_text, text=f"Score: {self.score}")
+        elif self.special_food_exists:
+            special_food_coords = self.canvas.coords(self.special_food)
+            if head_coords[0] < special_food_coords[2] and head_coords[2] > special_food_coords[0] and \
+               head_coords[1] < special_food_coords[3] and head_coords[3] > special_food_coords[1]:
+                if self.food_sound: self.food_sound.play()
+                self.remove_special_food()
+                self.score += 25
+                self.canvas.itemconfig(self.score_text, text=f"Score: {self.score}")
+            else:
+                tail = self.snake.pop()
+                self.canvas.delete(tail)
         else:
             tail = self.snake.pop()
             self.canvas.delete(tail)
@@ -333,6 +392,11 @@ class SnakeGame:
         next_color = FOOD_COLOR_1 if current_color == FOOD_COLOR_2 else FOOD_COLOR_2
         self.canvas.itemconfig(self.food, fill=next_color)
         self.master.after(400, self.animate_food)
+
+    def create_special_food_timed(self):
+        if self.state == 'game' and not self.special_food_exists:
+            self.create_special_food()
+        self.master.after(SPECIAL_FOOD_SPAWN_INTERVAL, self.create_special_food_timed)
 
     def dissolve_snake(self, segment_index):
         if segment_index < len(self.snake):
