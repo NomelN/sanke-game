@@ -1,7 +1,15 @@
 [
     {
+        "name": "KEILA",
+        "score": 2080
+    },
+    {
         "name": "NOMEL",
         "score": 550
+    },
+    {
+        "name": "KADESH",
+        "score": 480
     },
     {
         "name": "MIKE",
@@ -10,6 +18,14 @@
     {
         "name": "NOMEL",
         "score": 380
+    },
+    {
+        "name": "VANE",
+        "score": 220
+    },
+    {
+        "name": "TEST",
+        "score": 60
     },
     {
         "name": "JEAN",
