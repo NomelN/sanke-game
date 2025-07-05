@@ -18,6 +18,9 @@ try:
     pygame.mixer.music.load('média/8bit-music-for-game-68698.mp3')
     brick_hit_sound = pygame.mixer.Sound('média/explosion-312361.mp3')
     game_over_sound = pygame.mixer.Sound('média/game-over-38511.mp3')
+    ball_paddle_sound = pygame.mixer.Sound('média/balle.mp3')
+    level_passed_sound = pygame.mixer.Sound('média/level-passed-143039.mp3')
+    life_lost_sound = pygame.mixer.Sound('média/power-down-7103.mp3')
     pygame.mixer.music.set_volume(0.3)
     brick_hit_sound.set_volume(0.4)
 except pygame.error as e:
@@ -123,6 +126,7 @@ def start_game(player_name):
                 for ball in balls[:]:
                     # Collision with paddle
                     if ball.rect.colliderect(paddle):
+                        if ball_paddle_sound: ball_paddle_sound.play()
                         # Reposition ball to prevent tunneling
                         ball.rect.bottom = paddle.top
                         ball.speed[1] *= -1
@@ -154,12 +158,14 @@ def start_game(player_name):
                     if not any(b.type != 'I' for b in bricks):
                         level_running = False
                         current_level_index += 1
+                        if level_passed_sound: level_passed_sound.play()
                     if ball.rect.bottom > HEIGHT:
                         balls.remove(ball)
                 
                 if not balls:
                     lives[0] -= 1
                     if lives[0] > 0:
+                        if life_lost_sound: life_lost_sound.play()
                         balls.append(Ball(paddle.centerx, paddle.top - 20, ball_speed_initial, -ball_speed_initial))
                         pygame.time.wait(1000)
                     else:
