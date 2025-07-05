@@ -11,7 +11,7 @@ WIDTH = 600
 HEIGHT = 600
 SEGMENT_SIZE = 20
 GAME_SPEED = 100  # Millisecondes
-SCORE_FILE = "scores.json"
+SCORE_FILE = "snake.json"
 
 # --- Thème Futuriste ---
 BG_COLOR = "#0A0A2A"  # Bleu nuit profond

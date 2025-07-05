@@ -8,6 +8,10 @@
         "score": 520
     },
     {
+        "name": "AHOU",
+        "score": 460
+    },
+    {
         "name": "NOMEL",
         "score": 330
     },
@@ -21,6 +25,10 @@
     },
     {
         "name": "JEAN",
+        "score": 240
+    },
+    {
+        "name": "JEAN",
         "score": 190
     },
     {
@@ -30,13 +38,5 @@
     {
         "name": "MIKE",
         "score": 150
-    },
-    {
-        "name": "AKPA",
-        "score": 130
-    },
-    {
-        "name": "MAMAN",
-        "score": 100
     }
 ]
