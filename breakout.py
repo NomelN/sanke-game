@@ -174,78 +174,86 @@ def start_game(player_name):
     score = 0
     lives = 3
     running = True
+    paused = False
 
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    paused = not paused
+                    if paused:
+                        pygame.mixer.music.pause()
+                    else:
+                        pygame.mixer.music.unpause()
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] and paddle.left > 0:
-            paddle.move_ip(-8, 0)
-        if keys[pygame.K_RIGHT] and paddle.right < WIDTH:
-            paddle.move_ip(8, 0)
+        if not paused:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT] and paddle.left > 0:
+                paddle.move_ip(-8, 0)
+            if keys[pygame.K_RIGHT] and paddle.right < WIDTH:
+                paddle.move_ip(8, 0)
 
-        ball.move_ip(*ball_speed)
+            ball.move_ip(*ball_speed)
 
-        # --- Collisions ---
-        if ball.left <= 0 or ball.right >= WIDTH:
-            ball_speed[0] = -ball_speed[0]
-        if ball.top <= GAME_AREA_Y_START:
-            ball_speed[1] = -ball_speed[1]
-        if ball.colliderect(paddle):
-            ball_speed[1] = -abs(ball_speed[1])
+            # --- Collisions ---
+            if ball.left <= 0 or ball.right >= WIDTH:
+                ball_speed[0] = -ball_speed[0]
+            if ball.top <= GAME_AREA_Y_START:
+                ball_speed[1] = -ball_speed[1]
+            if ball.colliderect(paddle):
+                ball_speed[1] = -abs(ball_speed[1])
 
-        hit_brick = ball.collidelist(bricks)
-        if hit_brick != -1:
-            bricks.pop(hit_brick)
-            ball_speed[1] = -ball_speed[1]
-            score += 10
-            if brick_hit_sound:
-                brick_hit_sound.play()
-        
-        # --- Logique de jeu ---
-        if not bricks:
-            level += 1
-            draw_text(f"NIVEAU {level}", title_font, HIGHLIGHT_COLOR, WIDTH // 2, HEIGHT // 2)
-            pygame.display.update()
-            pygame.time.wait(1500)
-            bricks = create_bricks(level)
-            ball_speed_val = ball_speed_initial + (level - 1) * 0.5
-            ball_speed = [random.choice([-ball_speed_val, ball_speed_val]), -ball_speed_val]
-            ball.center = (WIDTH // 2, HEIGHT // 2)
-
-        if ball.bottom > HEIGHT:
-            lives -= 1
-            if lives > 0:
-                ball.center = (WIDTH // 2, HEIGHT // 2)
-                pygame.time.wait(500)
-            else:
-                if pygame.mixer.get_init():
-                    pygame.mixer.music.stop()
-                    if game_over_sound: game_over_sound.play()
-                
-                save_score(player_name, score)
-                win.fill(BG_COLOR)
-                draw_text("GAME OVER", title_font, RED, WIDTH // 2, HEIGHT // 2 - 50)
-                draw_text(f"Final Score: {score}", menu_font, TEXT_COLOR, WIDTH // 2, HEIGHT // 2 + 20)
-                draw_text("Appuyez sur Entrée", info_font, TEXT_COLOR, WIDTH // 2, HEIGHT // 2 + 80)
+            hit_brick = ball.collidelist(bricks)
+            if hit_brick != -1:
+                bricks.pop(hit_brick)
+                ball_speed[1] = -ball_speed[1]
+                score += 10
+                if brick_hit_sound:
+                    brick_hit_sound.play()
+            
+            # --- Logique de jeu ---
+            if not bricks:
+                level += 1
+                draw_text(f"NIVEAU {level}", title_font, HIGHLIGHT_COLOR, WIDTH // 2, HEIGHT // 2)
                 pygame.display.update()
-                
-                waiting = True
-                while waiting:
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT: pygame.quit(); exit()
-                        if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                            waiting = False
-                return
+                pygame.time.wait(1500)
+                bricks = create_bricks(level)
+                ball_speed_val = ball_speed_initial + (level - 1) * 0.5
+                ball_speed = [random.choice([-ball_speed_val, ball_speed_val]), -ball_speed_val]
+                ball.center = (WIDTH // 2, HEIGHT // 2)
+
+            if ball.bottom > HEIGHT:
+                lives -= 1
+                if lives > 0:
+                    ball.center = (WIDTH // 2, HEIGHT // 2)
+                    pygame.time.wait(500)
+                else:
+                    if pygame.mixer.get_init():
+                        pygame.mixer.music.stop()
+                        if game_over_sound: game_over_sound.play()
+                    
+                    save_score(player_name, score)
+                    win.fill(BG_COLOR)
+                    draw_text("GAME OVER", title_font, RED, WIDTH // 2, HEIGHT // 2 - 50)
+                    draw_text(f"Final Score: {score}", menu_font, TEXT_COLOR, WIDTH // 2, HEIGHT // 2 + 20)
+                    draw_text("Appuyez sur Entrée", info_font, TEXT_COLOR, WIDTH // 2, HEIGHT // 2 + 80)
+                    pygame.display.update()
+                    
+                    waiting = True
+                    while waiting:
+                        for event in pygame.event.get():
+                            if event.type == pygame.QUIT: pygame.quit(); exit()
+                            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                                waiting = False
+                    return
 
         # --- Affichage ---
         win.fill(BG_COLOR)
         # Panneau HUD
         pygame.draw.rect(win, HUD_BG_COLOR, (0, 0, WIDTH, TOP_PANEL_HEIGHT))
-        # Position verticale calculée pour un meilleur centrage
         y_pos = 13 
         draw_text(f"{player_name}", hud_font, HIGHLIGHT_COLOR, 10, y_pos, center=False)
         draw_text(f"Score: {score}", hud_font, TEXT_COLOR, 160, y_pos, center=False)
@@ -257,6 +265,13 @@ def start_game(player_name):
         pygame.draw.ellipse(win, BALL_COLOR, ball)
         for i, brick in enumerate(bricks):
             pygame.draw.rect(win, BRICK_COLORS[i % len(BRICK_COLORS)], brick, border_radius=4)
+
+        if paused:
+            overlay = pygame.Surface((WIDTH, HEIGHT - TOP_PANEL_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 150))
+            win.blit(overlay, (0, TOP_PANEL_HEIGHT))
+            draw_text("PAUSE", title_font, HIGHLIGHT_COLOR, WIDTH // 2, HEIGHT // 2)
+            draw_text("Appuyez sur Espace pour reprendre", info_font, TEXT_COLOR, WIDTH // 2, HEIGHT // 2 + 60)
 
         pygame.display.update()
         clock.tick(60)
