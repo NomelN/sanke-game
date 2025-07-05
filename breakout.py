@@ -245,10 +245,12 @@ def start_game(player_name):
         win.fill(BG_COLOR)
         # Panneau HUD
         pygame.draw.rect(win, HUD_BG_COLOR, (0, 0, WIDTH, TOP_PANEL_HEIGHT))
-        draw_text(f"{player_name}", hud_font, HIGHLIGHT_COLOR, 10, TOP_PANEL_HEIGHT // 2, center=False)
-        draw_text(f"Score: {score}", hud_font, TEXT_COLOR, 180, TOP_PANEL_HEIGHT // 2, center=False)
-        draw_text(f"Niveau: {level}", hud_font, TEXT_COLOR, WIDTH // 2, TOP_PANEL_HEIGHT // 2, center=True)
-        draw_text(f"Vies: {lives}", hud_font, TEXT_COLOR, WIDTH - 90, TOP_PANEL_HEIGHT // 2, center=False)
+        # Position verticale calculée pour un meilleur centrage
+        y_pos = 13 
+        draw_text(f"{player_name}", hud_font, HIGHLIGHT_COLOR, 10, y_pos, center=False)
+        draw_text(f"Score: {score}", hud_font, TEXT_COLOR, 160, y_pos, center=False)
+        draw_text(f"Niveau: {level}", hud_font, TEXT_COLOR, 330, y_pos, center=False)
+        draw_text(f"Vies: {lives}", hud_font, TEXT_COLOR, 510, y_pos, center=False)
         
         # Aire de jeu
         pygame.draw.rect(win, PADDLE_COLOR, paddle, border_radius=4)
